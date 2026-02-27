@@ -13,8 +13,7 @@ local big_font = imgui.load_font(nil, 42)
 local function quaternion_to_euler_fixed(q)
     local rad_to_deg = 180 / math.pi
 
-    -- 1. Pitch (The one you want stable)
-    -- We use the Forward-Y component specifically
+    -- Pitch
     local sinp = 2 * (q.w * q.x - q.y * q.z)
     local pitch
     if math.abs(sinp) >= 1 then
@@ -23,12 +22,12 @@ local function quaternion_to_euler_fixed(q)
         pitch = math.asin(sinp)
     end
 
-    -- 2. Yaw (Horizontal)
+    -- Yaw 
     local siny_cosp = 2 * (q.w * q.y + q.z * q.x)
     local cosy_cosp = 1 - 2 * (q.x * q.x + q.y * q.y)
     local yaw = math.atan(siny_cosp, cosy_cosp)
 
-    -- Convert to degrees and wrap to 360
+    -- Convert to degrees and wrapping
     local final_yaw = (yaw * rad_to_deg) % 360
     local final_pitch = (pitch * rad_to_deg) % 360
 
@@ -40,9 +39,8 @@ re.on_draw_ui(function()
     if imgui.tree_node("Player Utils") then
         _, enable_script = imgui.checkbox("Start Player Utils", enable_script)
         
-        -- Everything below this line only shows if "Start Player Utils" is checked
         if enable_script then
-            imgui.separator() -- Adds a nice visual line to separate the master switch
+            imgui.separator()
 
             if imgui.tree_node("Player Position") then
                 _, enable_player_pos = imgui.checkbox("Enable Player Position", enable_player_pos)
@@ -109,12 +107,11 @@ re.on_frame(function()
         if not player_pos then return end
         
         local pos_text = string.format("Player: X: %.4f, Y: %.4f, Z: %.4f", player_pos.x, player_pos.z, player_pos.y)
-            
-        -- 2. Calculate coordinates (Percentage * Resolution)
+        
+        -- Gives relative screen position
         local draw_x = screen_size.x * text_pos_x
         local draw_y = screen_size.y * text_pos_y
 
-        -- 3. Draw
         imgui.push_font(big_font)
         draw.text(pos_text, draw_x, draw_y, 0xFFFFFFFF)
         imgui.pop_font()
@@ -124,12 +121,9 @@ re.on_frame(function()
     ---------------------------- CameraSystem ------------------------------------
     if enable_camera_rot then
 
-        -- Usually, Role 0 is the Main/Player camera.
-        -- You can verify the number in the REFramework 'Enums' explorer.
         local camera_obj = camera_system:call("getCameraObject", 0)
 
         if camera_obj then
-            -- Now you can get the Transform to see where it's pointing
             local transform = camera_obj:call("get_Transform")
             if transform then
                 -- --local pos = transform:call("get_Position")
@@ -139,11 +133,10 @@ re.on_frame(function()
 
                 local rot_text = string.format("Cam Angles: Yaw: %.4f, Pitch: %.4f", yaw, pitch)
             
-                -- 2. Calculate coordinates (Percentage * Resolution)
+                -- Gives relative screen position
                 local draw_x = screen_size.x * text_cam_x
                 local draw_y = screen_size.y * text_cam_y
 
-                -- 3. Draw
                 imgui.push_font(big_font)
                 draw.text(rot_text, draw_x, draw_y, 0xFFFFFFFF)
                 imgui.pop_font()
